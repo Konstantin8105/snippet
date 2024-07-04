@@ -1,0 +1,11 @@
+// Snippet dEfer
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("%s:%v", filename, err)
+		}
+	}()
+
+// end dEfer
+
+// Snippet empty
+// end     empty
