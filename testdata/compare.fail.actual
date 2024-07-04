@@ -1,0 +1,39 @@
+
+
+// snippet defer2
+defer func() {
+	fmt.Println("Hello")
+}()
+// end defer2
+
+
+sadasd as
+
+
+asas das
+
+
+// snippet dEfer
+defer func() {
+	fmt.Println("Hello")
+}()
+
+dfdf
+// end defEr
+
+
+
+// snippet dEfer
+defer func() {
+	fmt.Println("Hello")
+}()
+// end defEr
+
+asd asd 
+
+
+// snippet deFer5
+defer func() {
+	fmt.Println("Hello")
+}()
+// end dEfer5

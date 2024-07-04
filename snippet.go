@@ -39,6 +39,7 @@ type record struct {
 
 type snippet struct {
 	name string
+	pos  string
 	code []string
 }
 
@@ -54,6 +55,7 @@ func Get(filename string) (snippets []snippet, err error) {
 	// read file
 	dat, err := os.ReadFile(filename)
 	if err != nil {
+		err = fmt.Errorf("%s cannot open. %w", filename, err)
 		return
 	}
 	dat = bytes.ReplaceAll(dat, []byte("\r"), []byte{})
@@ -140,6 +142,7 @@ func Get(filename string) (snippets []snippet, err error) {
 	for i := 1; i < len(records); i += 2 {
 		snippets = append(snippets, snippet{
 			name: records[i-1].name,
+			pos:  fmt.Sprintf("%s:%d:", filename, records[i-1].line),
 			code: lines[records[i-1].line:records[i].line],
 		})
 	}
@@ -153,5 +156,46 @@ func Get(filename string) (snippets []snippet, err error) {
 		snippets[i].code = cs
 	}
 
+	return
+}
+
+func Compare(expectFilename, actualFilename string) (err error) {
+	expect, err := Get(expectFilename)
+	if err != nil {
+		return
+	}
+
+	actual, err := Get(actualFilename)
+	if err != nil {
+		return
+	}
+
+	for _, act := range actual {
+		found := false
+		index := -1
+		for ie, exp := range expect {
+			if strings.EqualFold(act.name, exp.name) {
+				found = true
+				index = ie
+			}
+		}
+		if !found {
+			err = errors.Join(err,
+				fmt.Errorf("%s cannot find snippet with name `%s`",
+					act.pos,
+					act.name,
+				))
+			continue
+		}
+		ac := strings.Join(act.code, "\n")
+		ec := strings.Join(expect[index].code, "\n")
+		if ac != ec {
+			err = errors.Join(err,
+				fmt.Errorf("%s code is not same",
+					act.pos,
+				))
+			continue
+		}
+	}
 	return
 }

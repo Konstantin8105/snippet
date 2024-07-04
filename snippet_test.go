@@ -9,9 +9,9 @@ import (
 	"github.com/Konstantin8105/compare"
 )
 
-func Test(t *testing.T) {
-	td := "./testdata/" // test directory
+const td = "./testdata/" // test directory
 
+func Test(t *testing.T) {
 	entries, err := os.ReadDir(td)
 	if err != nil {
 		t.Fatal(err)
@@ -37,6 +37,7 @@ func Test(t *testing.T) {
 				if err == nil {
 					t.Errorf("not fail test")
 				}
+				t.Logf("%v", err)
 			})
 		}
 	}
@@ -46,6 +47,35 @@ func Test(t *testing.T) {
 		if err == nil {
 			t.Fatalf("haven`t error for wrong filename")
 		}
+		t.Logf("%v", err)
 	}
-	// Compare(t, "./snippet_test.go")
+}
+func TestCompare(t *testing.T) {
+	t.Run("not.valid1", func(t *testing.T) {
+		err := Compare("Not exist 1", "Not exist 2")
+		if err == nil {
+			t.Errorf("shall be error")
+		}
+		t.Logf("%v", err)
+	})
+	t.Run("not.valid2", func(t *testing.T) {
+		err := Compare(td+"compare.expect", "Not exist 3")
+		if err == nil {
+			t.Errorf("shall be error")
+		}
+		t.Logf("%v", err)
+	})
+	t.Run("not.valid3", func(t *testing.T) {
+		err := Compare(td+"compare.expect", td+"compare.fail.actual")
+		if err == nil {
+			t.Errorf("shall be error")
+		}
+		t.Logf("%v", err)
+	})
+	t.Run("valid", func(t *testing.T) {
+		err := Compare(td+"compare.expect", td+"compare.actual")
+		if err != nil {
+			t.Error(err)
+		}
+	})
 }

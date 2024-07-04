@@ -1,0 +1,5 @@
+// snippet defer
+defer func() {
+	fmt.Println("Hello")
+}()
+// end defer
