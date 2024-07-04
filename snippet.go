@@ -1,6 +1,6 @@
 // Package snippet compare snippets in golang file.
 //
-// Snippet lines without specific upcase/lower case of letters.
+// Snippets lines without specific upcase/lower case of letters.
 // Name of snippet is single word.
 //
 // Format of snippet:
@@ -15,7 +15,9 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
+	"testing"
 )
 
 const (
@@ -110,7 +112,7 @@ func Get(filename string) (snippets []snippet, err error) {
 
 	// check names
 	for i := 1; i < len(records); i += 2 {
-		if strings.ToLower(records[i-1].name) != strings.ToLower(records[i].name) {
+		if !strings.EqualFold(records[i-1].name, records[i].name) {
 			err = errors.Join(
 				fmt.Errorf(
 					"%s:%d: is not same name with end: `%s`",
@@ -198,4 +200,31 @@ func Compare(expectFilename, actualFilename string) (err error) {
 		}
 	}
 	return
+}
+
+var ExpectSnippets = "./expect.snippets"
+
+// Test check only '*.go' files in `folder` with subfolders.
+// Location with expected snippets in file "ExpectSnippets"
+func Test(t *testing.T, folder string) {
+	var errs error
+	expect := ExpectSnippets
+	err := filepath.Walk(folder,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() {
+				return nil
+			}
+			if !strings.HasSuffix(path, ".go") {
+				return nil
+			}
+			errs = errors.Join(errs, Compare(expect, path))
+			return nil
+		})
+	err = errors.Join(err, errs)
+	if err != nil {
+		t.Error(err)
+	}
 }

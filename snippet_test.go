@@ -1,4 +1,4 @@
-package snippet
+package snippet_test
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/Konstantin8105/compare"
+	"github.com/Konstantin8105/snippet"
 )
 
 const td = "./testdata/" // test directory
@@ -20,7 +21,7 @@ func Test(t *testing.T) {
 		name := ent.Name()
 		if strings.HasSuffix(name, "ok") {
 			t.Run(name, func(t *testing.T) {
-				sns, err := Get(td + name)
+				sns, err := snippet.Get(td + name)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -33,7 +34,7 @@ func Test(t *testing.T) {
 		}
 		if strings.HasSuffix(name, "fail") {
 			t.Run(name, func(t *testing.T) {
-				_, err := Get(td + name)
+				_, err := snippet.Get(td + name)
 				if err == nil {
 					t.Errorf("not fail test")
 				}
@@ -43,7 +44,7 @@ func Test(t *testing.T) {
 	}
 	{
 		// wrong filename
-		_, err := Get("not valid filename")
+		_, err := snippet.Get("not valid filename")
 		if err == nil {
 			t.Fatalf("haven`t error for wrong filename")
 		}
@@ -52,30 +53,35 @@ func Test(t *testing.T) {
 }
 func TestCompare(t *testing.T) {
 	t.Run("not.valid1", func(t *testing.T) {
-		err := Compare("Not exist 1", "Not exist 2")
+		err := snippet.Compare("Not exist 1", "Not exist 2")
 		if err == nil {
 			t.Errorf("shall be error")
 		}
 		t.Logf("%v", err)
 	})
 	t.Run("not.valid2", func(t *testing.T) {
-		err := Compare(td+"compare.expect", "Not exist 3")
+		err := snippet.Compare(td+"compare.expect", "Not exist 3")
 		if err == nil {
 			t.Errorf("shall be error")
 		}
 		t.Logf("%v", err)
 	})
 	t.Run("not.valid3", func(t *testing.T) {
-		err := Compare(td+"compare.expect", td+"compare.fail.actual")
+		err := snippet.Compare(td+"compare.expect", td+"compare.fail.actual")
 		if err == nil {
 			t.Errorf("shall be error")
 		}
 		t.Logf("%v", err)
 	})
 	t.Run("valid", func(t *testing.T) {
-		err := Compare(td+"compare.expect", td+"compare.actual")
+		err := snippet.Compare(td+"compare.expect", td+"compare.actual")
 		if err != nil {
 			t.Error(err)
 		}
 	})
+}
+func TestTest(t *testing.T) {
+	// snippet A
+	snippet.Test(t, ".")
+	// end A
 }
