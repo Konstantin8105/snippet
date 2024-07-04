@@ -80,8 +80,23 @@ func TestCompare(t *testing.T) {
 		}
 	})
 }
+
+type mockTest struct {
+	res error
+}
+
+func (m *mockTest) Errorf(format string, args ...any) {
+	m.res = fmt.Errorf(format, args...)
+}
+
 func TestTest(t *testing.T) {
 	// snippet A
 	snippet.Test(t, ".")
 	// end A
+
+	m := new(mockTest)
+	snippet.Test(m, "wrong data")
+	if m.res == nil {
+		t.Fatalf("shall be error")
+	}
 }

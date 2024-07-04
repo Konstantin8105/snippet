@@ -17,7 +17,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"testing"
 )
 
 const (
@@ -206,7 +205,9 @@ var ExpectSnippets = "./expect.snippets"
 
 // Test check only '*.go' files in `folder` with subfolders.
 // Location with expected snippets in file "ExpectSnippets"
-func Test(t *testing.T, folder string) {
+func Test(t interface {
+	Errorf(format string, args ...any)
+}, folder string) {
 	var errs error
 	expect := ExpectSnippets
 	err := filepath.Walk(folder,
@@ -225,6 +226,6 @@ func Test(t *testing.T, folder string) {
 		})
 	err = errors.Join(err, errs)
 	if err != nil {
-		t.Error(err)
+		t.Errorf("%w", err)
 	}
 }
