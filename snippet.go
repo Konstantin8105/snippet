@@ -19,6 +19,21 @@ import (
 	"strings"
 )
 
+// Example folding code part for VSCode:
+//
+//	// #region Math functions
+//	function add(a, b) {
+//		return a + b
+//	}
+//	// #endregion
+//
+// Example folding code for Vim:
+//
+//	set foldmethod=marker
+//	set foldmarker={{{,}}}
+//	{{{
+//		fold level here is 2
+//	}}}
 const (
 	prefixName = "//"
 	startName  = "snippet"
