@@ -68,6 +68,11 @@ func (s snippet) String() string {
 }
 
 func Get(filename string) (snippets []snippet, err error) {
+	defer func() {
+		if err != nil {
+			err = errors.Join(fmt.Errorf("Get error for `%s`", filename), err)
+		}
+	}()
 	// read file
 	dat, err := os.ReadFile(filename)
 	if err != nil {
@@ -176,6 +181,17 @@ func Get(filename string) (snippets []snippet, err error) {
 }
 
 func Compare(expectFilename, actualFilename string) (err error) {
+	defer func() {
+		if err != nil {
+			err = errors.Join(
+				fmt.Errorf("Compare error: expect `%s`, actual `%s`",
+					expectFilename,
+					actualFilename,
+				),
+				err,
+			)
+		}
+	}()
 	expect, err := Get(expectFilename)
 	if err != nil {
 		return
@@ -241,6 +257,6 @@ func Test(t interface {
 		})
 	err = errors.Join(err, errs)
 	if err != nil {
-		t.Errorf("%w", err)
+		t.Errorf("%v", err)
 	}
 }
