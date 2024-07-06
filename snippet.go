@@ -101,6 +101,11 @@ func Update(filename string, sn []Snippet) (err error) {
 			err = errors.Join(fmt.Errorf("Update error for `%s`", filename), err)
 		}
 	}()
+
+	if len(sn) == 0 {
+		return
+	}
+
 	actual, err := Get(filename)
 	if err != nil {
 		return
@@ -112,14 +117,45 @@ func Update(filename string, sn []Snippet) (err error) {
 		return actual[i].Start.Line < actual[j].Start.Line
 	})
 
+	changed := false
 	for i := range actual {
-		fmt.Println(actual[i])
+		for _, exp := range sn {
+			if !strings.EqualFold(actual[i].Name, exp.Name) {
+				continue
+			}
+			if strings.Join(actual[i].Code, "\n") == strings.Join(exp.Code, "\n") {
+				continue
+			}
+			changed = true
+			actual[i].Code = exp.Code
+		}
+	}
+	if !changed {
+		return
 	}
 
-	// lines, err := getLines(filename)
-	// if err != nil {
-	// 	return
-	// }
+	lines, err := getLines(filename)
+	if err != nil {
+		return
+	}
+
+	var nl []string
+	for i := range actual {
+		if i == 0 {
+			nl = lines[:actual[i].Start.Line-1]
+		} else {
+			nl = append(nl, lines[actual[i-1].End.Line:actual[i].Start.Line-1]...)
+		}
+		nl = append(nl, actual[i].String())
+		if i == len(actual)-1 {
+			nl = append(nl, lines[actual[i].End.Line:]...)
+		}
+	}
+
+	err = os.WriteFile(filename, []byte(strings.Join(nl, "\n")), 0666)
+	if err != nil {
+		return
+	}
 
 	return
 }

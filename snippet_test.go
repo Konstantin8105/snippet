@@ -1,8 +1,10 @@
 package snippet_test
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
 
@@ -140,4 +142,56 @@ func TestTest(t *testing.T) {
 		}
 		t.Logf("%v", m.res)
 	})
+}
+
+func TestUpdate(t *testing.T) {
+	var err error
+
+	_, err = exec.Command("cp", "./testdata/cli.actual", "./testdata/cli.actual.1").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	{
+		act, err := os.ReadFile("./testdata/cli.result")
+		if err != nil {
+			t.Fatal(err)
+		}
+		act1, err := os.ReadFile("./testdata/cli.actual.1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if bytes.Equal(act, act1) {
+			t.Fatal("files are same")
+		}
+	}
+
+	sn, err := snippet.Get("./testdata/cli.expect")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = snippet.Update("./testdata/cli.actual.1", sn)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	{
+		act, err := os.ReadFile("./testdata/cli.result")
+		if err != nil {
+			t.Fatal(err)
+		}
+		act1, err := os.ReadFile("./testdata/cli.actual.1")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Equal(act, act1) {
+			t.Fatalf("files are not same:\n%v", compare.Diff(act, act1))
+		}
+	}
+
+	_, err = exec.Command("rm", "-f", "./testdata/cli.actual.1").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
