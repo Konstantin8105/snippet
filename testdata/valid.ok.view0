@@ -1,8 +1,15 @@
+./testdata/valid.ok:7:
 // snippet dEfer
 defer func() {
 if err != nil {
 err = fmt.Errorf("%s:%v", filename, err)
 }
 }()
-
+1
+2
+2
+3
+34
+45
 // end dEfer
+./testdata/valid.ok:19:

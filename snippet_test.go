@@ -90,13 +90,31 @@ func (m *mockTest) Errorf(format string, args ...any) {
 }
 
 func TestTest(t *testing.T) {
-	// snippet A
-	snippet.Test(t, ".")
-	// end A
+	t.Run("valid", func(t *testing.T) {
+		// snippet A
+		snippet.Test(t, ".")
+		// end A
+	})
+	t.Run("not.valid.file", func(t *testing.T) {
+		m := new(mockTest)
+		snippet.Test(m, "wrong data")
+		if m.res == nil {
+			t.Fatalf("shall be error")
+		}
+		t.Logf("%v", m.res)
+	})
+	t.Run("not.valid.snippet", func(t *testing.T) {
+		old := snippet.ExpectSnippets
+		defer func() {
+			snippet.ExpectSnippets = old
+		}()
+		snippet.ExpectSnippets = "./fail.snippets"
 
-	m := new(mockTest)
-	snippet.Test(m, "wrong data")
-	if m.res == nil {
-		t.Fatalf("shall be error")
-	}
+		m := new(mockTest)
+		snippet.Test(m, ".")
+		if m.res == nil {
+			t.Fatalf("shall be error")
+		}
+		t.Logf("%v", m.res)
+	})
 }

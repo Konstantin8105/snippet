@@ -1,3 +1,5 @@
+./testdata/double.ok:1:
 // snippet A
 // some test A
 // end A
+./testdata/double.ok:3:

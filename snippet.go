@@ -53,21 +53,35 @@ type record struct {
 	name string
 }
 
-type snippet struct {
-	name string
-	pos  string
-	code []string
+type Position struct {
+	Filename string
+	Line     int
 }
 
-func (s snippet) String() string {
+func (p Position) String() string {
+	return fmt.Sprintf("%s:%d:", p.Filename, p.Line)
+}
+
+type Snippet struct {
+	Name       string
+	Start, End Position
+	Code       []string
+}
+
+func (s Snippet) String() string {
 	var out string
-	out += fmt.Sprintf("%s %s %s\n", prefixName, startName, s.name)
-	out += strings.Join(s.code, "\n")
-	out += fmt.Sprintf("\n%s %s %s\n", prefixName, endName, s.name)
+	out += fmt.Sprintf("%s\n", s.Start)
+	out += fmt.Sprintf("%s %s %s\n", prefixName, startName, s.Name)
+	if 0 < len(s.Code) {
+		out += strings.Join(s.Code, "\n")
+		out += "\n"
+	}
+	out += fmt.Sprintf("%s %s %s\n", prefixName, endName, s.Name)
+	out += fmt.Sprintf("%s\n", s.End)
 	return out
 }
 
-func Get(filename string) (snippets []snippet, err error) {
+func Get(filename string) (snippets []Snippet, err error) {
 	defer func() {
 		if err != nil {
 			err = errors.Join(fmt.Errorf("Get error for `%s`", filename), err)
@@ -79,7 +93,10 @@ func Get(filename string) (snippets []snippet, err error) {
 		err = fmt.Errorf("%s cannot open. %w", filename, err)
 		return
 	}
-	dat = bytes.ReplaceAll(dat, []byte("\r"), []byte{})
+	if bytes.Contains(dat, []byte("\r")) {
+		err = fmt.Errorf("not support file `%s` with byte \\r", filename)
+		return
+	}
 
 	var records []record
 
@@ -161,25 +178,27 @@ func Get(filename string) (snippets []snippet, err error) {
 
 	// create snippets
 	for i := 1; i < len(records); i += 2 {
-		snippets = append(snippets, snippet{
-			name: records[i-1].name,
-			pos:  fmt.Sprintf("%s:%d:", filename, records[i-1].line),
-			code: lines[records[i-1].line:records[i].line],
+		snippets = append(snippets, Snippet{
+			Name:  records[i-1].name,
+			Start: Position{Filename: filename, Line: records[i-1].line},
+			End:   Position{Filename: filename, Line: records[i].line + 1},
+			Code:  lines[records[i-1].line:records[i].line],
 		})
 	}
 
 	// clean code
 	for i := range snippets {
-		cs := snippets[i].code
+		cs := snippets[i].Code
 		for i := range cs {
 			cs[i] = strings.TrimSpace(cs[i])
 		}
-		snippets[i].code = cs
+		snippets[i].Code = cs
 	}
 
 	return
 }
 
+// Compare snippers from expectFilenames and files/folders from actualFilename
 func Compare(expectFilename, actualFilename string) (err error) {
 	defer func() {
 		if err != nil {
@@ -197,6 +216,31 @@ func Compare(expectFilename, actualFilename string) (err error) {
 		return
 	}
 
+	fileInfo, err := os.Stat(actualFilename)
+	if err != nil {
+		return
+	}
+	if fileInfo.IsDir() {
+		// is a directory
+		var errs []error
+		err = filepath.Walk(actualFilename,
+			func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				if info.IsDir() {
+					return nil
+				}
+				if !strings.HasSuffix(path, ".go") {
+					return nil
+				}
+				errs = append(errs, Compare(expectFilename, path))
+				return nil
+			})
+		err = errors.Join(err, errors.Join(errs...))
+		return
+	}
+
 	actual, err := Get(actualFilename)
 	if err != nil {
 		return
@@ -206,7 +250,7 @@ func Compare(expectFilename, actualFilename string) (err error) {
 		found := false
 		index := -1
 		for ie, exp := range expect {
-			if strings.EqualFold(act.name, exp.name) {
+			if strings.EqualFold(act.Name, exp.Name) {
 				found = true
 				index = ie
 			}
@@ -214,17 +258,17 @@ func Compare(expectFilename, actualFilename string) (err error) {
 		if !found {
 			err = errors.Join(err,
 				fmt.Errorf("%s cannot find snippet with name `%s`",
-					act.pos,
-					act.name,
+					act.Start,
+					act.Name,
 				))
 			continue
 		}
-		ac := strings.Join(act.code, "\n")
-		ec := strings.Join(expect[index].code, "\n")
+		ac := strings.Join(act.Code, "\n")
+		ec := strings.Join(expect[index].Code, "\n")
 		if ac != ec {
 			err = errors.Join(err,
 				fmt.Errorf("%s code is not same",
-					act.pos,
+					act.Start,
 				))
 			continue
 		}
@@ -232,6 +276,7 @@ func Compare(expectFilename, actualFilename string) (err error) {
 	return
 }
 
+// Location of expect snippets
 var ExpectSnippets = "./expect.snippets"
 
 // Test check only '*.go' files in `folder` with subfolders.
@@ -239,24 +284,7 @@ var ExpectSnippets = "./expect.snippets"
 func Test(t interface {
 	Errorf(format string, args ...any)
 }, folder string) {
-	var errs error
-	expect := ExpectSnippets
-	err := filepath.Walk(folder,
-		func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if info.IsDir() {
-				return nil
-			}
-			if !strings.HasSuffix(path, ".go") {
-				return nil
-			}
-			errs = errors.Join(errs, Compare(expect, path))
-			return nil
-		})
-	err = errors.Join(err, errs)
-	if err != nil {
+	if err := Compare(ExpectSnippets, folder); err != nil {
 		t.Errorf("%v", err)
 	}
 }
