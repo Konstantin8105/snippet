@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -70,23 +71,16 @@ type Snippet struct {
 
 func (s Snippet) String() string {
 	var out string
-	out += fmt.Sprintf("%s\n", s.Start)
 	out += fmt.Sprintf("%s %s %s\n", prefixName, startName, s.Name)
 	if 0 < len(s.Code) {
 		out += strings.Join(s.Code, "\n")
 		out += "\n"
 	}
-	out += fmt.Sprintf("%s %s %s\n", prefixName, endName, s.Name)
-	out += fmt.Sprintf("%s\n", s.End)
+	out += fmt.Sprintf("%s %s %s", prefixName, endName, s.Name)
 	return out
 }
 
-func Get(filename string) (snippets []Snippet, err error) {
-	defer func() {
-		if err != nil {
-			err = errors.Join(fmt.Errorf("Get error for `%s`", filename), err)
-		}
-	}()
+func getLines(filename string) (lines []string, err error) {
 	// read file
 	dat, err := os.ReadFile(filename)
 	if err != nil {
@@ -97,10 +91,50 @@ func Get(filename string) (snippets []Snippet, err error) {
 		err = fmt.Errorf("not support file `%s` with byte \\r", filename)
 		return
 	}
+	lines = strings.Split(string(dat), "\n")
+	return
+}
 
+func Update(filename string, sn []Snippet) (err error) {
+	defer func() {
+		if err != nil {
+			err = errors.Join(fmt.Errorf("Update error for `%s`", filename), err)
+		}
+	}()
+	actual, err := Get(filename)
+	if err != nil {
+		return
+	}
+	if len(actual) == 0 {
+		return
+	}
+	sort.Slice(actual, func(i, j int) bool {
+		return actual[i].Start.Line < actual[j].Start.Line
+	})
+
+	for i := range actual {
+		fmt.Println(actual[i])
+	}
+
+	// lines, err := getLines(filename)
+	// if err != nil {
+	// 	return
+	// }
+
+	return
+}
+
+func Get(filename string) (snippets []Snippet, err error) {
+	defer func() {
+		if err != nil {
+			err = errors.Join(fmt.Errorf("Get error for `%s`", filename), err)
+		}
+	}()
+	lines, err := getLines(filename)
+	if err != nil {
+		return
+	}
 	var records []record
-
-	lines := strings.Split(string(dat), "\n")
 	for i := range lines {
 		line := strings.TrimSpace(lines[i])
 		fs := strings.Fields(line)
@@ -215,29 +249,40 @@ func Compare(expectFilename, actualFilename string) (err error) {
 	if err != nil {
 		return
 	}
+	// check expect snippets
+	for i := range expect {
+		for j := range expect {
+			if i <= j {
+				continue
+			}
+			if strings.EqualFold(expect[i].Name, expect[j].Name) {
+				err = errors.Join(err,
+					fmt.Errorf("same snippets names `%s`", expect[i].Name),
+				)
+			}
+		}
+	}
+	if err != nil {
+		return
+	}
 
+	// check is file
 	fileInfo, err := os.Stat(actualFilename)
 	if err != nil {
 		return
 	}
 	if fileInfo.IsDir() {
 		// is a directory
+		var gofiles []string
+		gofiles, err = Paths(actualFilename)
+		if err != nil {
+			return
+		}
 		var errs []error
-		err = filepath.Walk(actualFilename,
-			func(path string, info os.FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-				if info.IsDir() {
-					return nil
-				}
-				if !strings.HasSuffix(path, ".go") {
-					return nil
-				}
-				errs = append(errs, Compare(expectFilename, path))
-				return nil
-			})
-		err = errors.Join(err, errors.Join(errs...))
+		for _, file := range gofiles {
+			errs = append(errs, Compare(expectFilename, file))
+		}
+		err = errors.Join(errs...)
 		return
 	}
 
@@ -287,4 +332,37 @@ func Test(t interface {
 	if err := Compare(ExpectSnippets, folder); err != nil {
 		t.Errorf("%v", err)
 	}
+}
+
+// Paths return only go filenames
+func Paths(paths ...string) (gofilenames []string, err error) {
+	for _, path := range paths {
+		fileInfo, errF := os.Stat(path)
+		if err != nil {
+			err = errors.Join(err, errF)
+			return
+		}
+		if fileInfo.IsDir() {
+			// is a directory
+			errW := filepath.Walk(path,
+				func(path string, info os.FileInfo, err error) error {
+					if err != nil {
+						return err
+					}
+					if info.IsDir() {
+						return nil
+					}
+					if !strings.HasSuffix(path, ".go") {
+						return nil
+					}
+					gofilenames = append(gofilenames, path)
+					return nil
+				})
+			err = errors.Join(err, errW)
+		} else {
+			// is file
+			gofilenames = append(gofilenames, path)
+		}
+	}
+	return
 }

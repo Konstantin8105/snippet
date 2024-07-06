@@ -36,6 +36,24 @@ func main() {
 
 	if *write {
 		// replace into file
+		ess, err := snippet.Get(*expect)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+			os.Exit(2)
+		}
+		gofiles, err := snippet.Paths(args...)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+			os.Exit(2)
+		}
+		for _, file := range gofiles {
+			err := snippet.Update(file, ess)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+				os.Exit(2)
+			}
+		}
+		return
 	}
 
 	var errs []error
@@ -43,7 +61,7 @@ func main() {
 		errs = append(errs, snippet.Compare(*expect, arg))
 	}
 	if err := errors.Join(errs...); err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(2)
 	}
 }

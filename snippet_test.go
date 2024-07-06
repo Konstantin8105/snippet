@@ -27,7 +27,12 @@ func Test(t *testing.T) {
 				}
 				for i := range sns {
 					filename := fmt.Sprintf("%s%s.view%d", td, name, i)
-					bs := []byte(sns[i].String())
+					bs := []byte(
+						fmt.Sprintf("%s\n%s\n%s\n",
+							sns[i].Start,
+							sns[i],
+							sns[i].End,
+						))
 					compare.Test(t, filename, bs)
 				}
 			})
@@ -103,15 +108,33 @@ func TestTest(t *testing.T) {
 		}
 		t.Logf("%v", m.res)
 	})
-	t.Run("not.valid.snippet", func(t *testing.T) {
+	t.Run("not.valid.snippet.folder", func(t *testing.T) {
+		// snippet B
 		old := snippet.ExpectSnippets
 		defer func() {
 			snippet.ExpectSnippets = old
 		}()
 		snippet.ExpectSnippets = "./fail.snippets"
+		// end B
 
 		m := new(mockTest)
 		snippet.Test(m, ".")
+		if m.res == nil {
+			t.Fatalf("shall be error")
+		}
+		t.Logf("%v", m.res)
+	})
+	t.Run("not.valid.snippet.file", func(t *testing.T) {
+		// snippet B
+		old := snippet.ExpectSnippets
+		defer func() {
+			snippet.ExpectSnippets = old
+		}()
+		snippet.ExpectSnippets = "./fail.snippets"
+		// end B
+
+		m := new(mockTest)
+		snippet.Test(m, "snippet_test.go")
 		if m.res == nil {
 			t.Fatalf("shall be error")
 		}

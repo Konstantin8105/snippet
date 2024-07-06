@@ -1,3 +1,12 @@
 // snippet A
 snippet.Test(t, ".")
 // end A
+
+
+// snippet B
+old := snippet.ExpectSnippets
+defer func() {
+	snippet.ExpectSnippets = old
+}()
+snippet.ExpectSnippets = "./fail.snippets"
+// end B
