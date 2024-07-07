@@ -34,7 +34,7 @@ func main() {
 		args = append(args, ".")
 	}
 
-	if *write {
+	{
 		// replace into file
 		ess, err := snippet.Get(*expect)
 		if err != nil {
@@ -46,14 +46,14 @@ func main() {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
 			os.Exit(2)
 		}
+
 		for _, file := range gofiles {
-			err := snippet.Update(file, ess)
+			err := snippet.Update(file, ess, *write)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
 				os.Exit(2)
 			}
 		}
-		return
 	}
 
 	var errs []error
