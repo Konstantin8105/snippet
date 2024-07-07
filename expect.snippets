@@ -10,3 +10,18 @@ defer func() {
 }()
 snippet.ExpectSnippets = "./fail.snippets"
 // end B
+
+
+// snippet deferfunc
+defer func() {
+	if err != nil {
+		err = errors.Join(
+			fmt.Errorf("%s. Filename : `%s`", op, filename),
+			err,
+		)
+	}
+}()
+// end deferfunc
+
+
+

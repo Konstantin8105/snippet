@@ -54,6 +54,7 @@ type record struct {
 	name string
 }
 
+// Position line of code
 type Position struct {
 	Filename string
 	Line     int
@@ -63,6 +64,9 @@ func (p Position) String() string {
 	return fmt.Sprintf("%s:%d:", p.Filename, p.Line)
 }
 
+/*
+Snippet inside code
+*/
 type Snippet struct {
 	Name       string
 	Start, End Position
@@ -81,6 +85,19 @@ func (s Snippet) String() string {
 }
 
 func getLines(filename string) (lines []string, err error) {
+	const op = "getLines"
+
+	// snippet deferfunc
+	defer func() {
+		if err != nil {
+			err = errors.Join(
+				fmt.Errorf("%s. Filename : `%s`", op, filename),
+				err,
+			)
+		}
+	}()
+	// end deferfunc
+
 	// read file
 	dat, err := os.ReadFile(filename)
 	if err != nil {
@@ -95,12 +112,20 @@ func getLines(filename string) (lines []string, err error) {
 	return
 }
 
+// Update snippets in file `filename`
 func Update(filename string, sn []Snippet) (err error) {
+	const op = "Update"
+
+	// snippet deferfunc
 	defer func() {
 		if err != nil {
-			err = errors.Join(fmt.Errorf("Update error for `%s`", filename), err)
+			err = errors.Join(
+				fmt.Errorf("%s. Filename : `%s`", op, filename),
+				err,
+			)
 		}
 	}()
+	// end deferfunc
 
 	if len(sn) == 0 {
 		return
@@ -160,12 +185,45 @@ func Update(filename string, sn []Snippet) (err error) {
 	return
 }
 
+// Get snippets from `filename` and it is folder or file
 func Get(filename string) (snippets []Snippet, err error) {
+	const op = "Get"
+
+	// snippet deferfunc
 	defer func() {
 		if err != nil {
-			err = errors.Join(fmt.Errorf("Get error for `%s`", filename), err)
+			err = errors.Join(
+				fmt.Errorf("%s. Filename : `%s`", op, filename),
+				err,
+			)
 		}
 	}()
+	// end deferfunc
+
+	// check is file
+	{
+		var gofiles []string
+		gofiles, err = Paths(filename)
+		if err != nil {
+			return
+		}
+		if len(gofiles) == 0 {
+			return
+		}
+		if 1 < len(gofiles) {
+			for _, file := range gofiles {
+				sn, errSn := Get(file)
+				if errSn != nil {
+					err = errors.Join(err, errSn)
+				} else {
+					snippets = append(snippets, sn...)
+				}
+			}
+			return
+		}
+		filename = gofiles[0]
+	}
+
 	lines, err := getLines(filename)
 	if err != nil {
 		return
@@ -181,8 +239,9 @@ func Get(filename string) (snippets []Snippet, err error) {
 		if 3 < len(fs) {
 			if fs[0] == prefixName && (fs[1] == startName || fs[1] == endName) {
 				err = fmt.Errorf(
-					"%s:%d: snipet name cannot be with spaces",
+					"%s:%d: snipet name cannot be with spaces: `%s`",
 					filename, i+1,
+					line,
 				)
 				return
 			}
@@ -270,9 +329,12 @@ func Get(filename string) (snippets []Snippet, err error) {
 
 // Compare snippers from expectFilenames and files/folders from actualFilename
 func Compare(expectFilename, actualFilename string) (err error) {
+	const op = "Compare"
+
 	defer func() {
 		if err != nil {
 			err = errors.Join(
+				fmt.Errorf("%s", op),
 				fmt.Errorf("Compare error: expect `%s`, actual `%s`",
 					expectFilename,
 					actualFilename,
@@ -281,6 +343,7 @@ func Compare(expectFilename, actualFilename string) (err error) {
 			)
 		}
 	}()
+
 	expect, err := Get(expectFilename)
 	if err != nil {
 		return
@@ -299,26 +362,6 @@ func Compare(expectFilename, actualFilename string) (err error) {
 		}
 	}
 	if err != nil {
-		return
-	}
-
-	// check is file
-	fileInfo, err := os.Stat(actualFilename)
-	if err != nil {
-		return
-	}
-	if fileInfo.IsDir() {
-		// is a directory
-		var gofiles []string
-		gofiles, err = Paths(actualFilename)
-		if err != nil {
-			return
-		}
-		var errs []error
-		for _, file := range gofiles {
-			errs = append(errs, Compare(expectFilename, file))
-		}
-		err = errors.Join(errs...)
 		return
 	}
 
@@ -357,7 +400,7 @@ func Compare(expectFilename, actualFilename string) (err error) {
 	return
 }
 
-// Location of expect snippets
+// ExpectSnippets is location of expect snippets
 var ExpectSnippets = "./expect.snippets"
 
 // Test check only '*.go' files in `folder` with subfolders.
@@ -372,9 +415,20 @@ func Test(t interface {
 
 // Paths return only go filenames
 func Paths(paths ...string) (gofilenames []string, err error) {
+	const op = "Path"
+
+	defer func() {
+		if err != nil {
+			err = errors.Join(
+				fmt.Errorf("%s. %v", op, paths),
+				err,
+			)
+		}
+	}()
+
 	for _, path := range paths {
 		fileInfo, errF := os.Stat(path)
-		if err != nil {
+		if errF != nil {
 			err = errors.Join(err, errF)
 			return
 		}
