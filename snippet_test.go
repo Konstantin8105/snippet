@@ -171,7 +171,23 @@ func TestUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = snippet.Update("./testdata/cli.actual.1", sn)
+	err = snippet.Update("./testdata/cli.actual.1", sn, true)
+	if err == nil {
+		t.Fatal("cannot find diff")
+	}
+	{
+		act1 := []byte(fmt.Sprintf("%v", err))
+		act, err := os.ReadFile("./testdata/cli.diff")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Equal(act, act1) {
+			t.Fatalf("files are not same:\n%v", compare.Diff(act, act1))
+		}
+	}
+	err = nil // ignore
+
+	err = snippet.Update("./testdata/cli.actual.1", sn, false)
 	if err != nil {
 		t.Fatal(err)
 	}

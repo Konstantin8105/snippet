@@ -15,9 +15,12 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/Konstantin8105/compare"
 )
 
 // Example folding code part for VSCode:
@@ -84,36 +87,8 @@ func (s Snippet) String() string {
 	return out
 }
 
-func getLines(filename string) (lines []string, err error) {
-	const op = "getLines"
-
-	// snippet deferfunc
-	defer func() {
-		if err != nil {
-			err = errors.Join(
-				fmt.Errorf("%s. Filename : `%s`", op, filename),
-				err,
-			)
-		}
-	}()
-	// end deferfunc
-
-	// read file
-	dat, err := os.ReadFile(filename)
-	if err != nil {
-		err = fmt.Errorf("%s cannot open. %w", filename, err)
-		return
-	}
-	if bytes.Contains(dat, []byte("\r")) {
-		err = fmt.Errorf("not support file `%s` with byte \\r", filename)
-		return
-	}
-	lines = strings.Split(string(dat), "\n")
-	return
-}
-
 // Update snippets in file `filename`
-func Update(filename string, sn []Snippet) (err error) {
+func Update(filename string, sn []Snippet, diff bool) (err error) {
 	const op = "Update"
 
 	// snippet deferfunc
@@ -142,6 +117,7 @@ func Update(filename string, sn []Snippet) (err error) {
 		return actual[i].Start.Line < actual[j].Start.Line
 	})
 
+	var differr error // error of diff
 	changed := false
 	for i := range actual {
 		for _, exp := range sn {
@@ -152,6 +128,18 @@ func Update(filename string, sn []Snippet) (err error) {
 				continue
 			}
 			changed = true
+			{
+				errd := compare.Diff(
+					[]byte(strings.Join(actual[i].Code, "\n")),
+					[]byte(strings.Join(exp.Code, "\n")),
+				)
+				if errd != nil {
+					differr = errors.Join(differr,
+						fmt.Errorf("Snippet name: %s", exp.Name),
+						errd,
+					)
+				}
+			}
 			actual[i].Code = exp.Code
 		}
 	}
@@ -159,10 +147,17 @@ func Update(filename string, sn []Snippet) (err error) {
 		return
 	}
 
-	lines, err := getLines(filename)
+	// read file
+	dat, err := os.ReadFile(filename)
 	if err != nil {
+		err = fmt.Errorf("%s cannot open. %w", filename, err)
 		return
 	}
+	if bytes.Contains(dat, []byte("\r")) {
+		err = fmt.Errorf("not support file `%s` with byte \\r", filename)
+		return
+	}
+	lines := strings.Split(string(dat), "\n")
 
 	var nl []string
 	for i := range actual {
@@ -177,9 +172,22 @@ func Update(filename string, sn []Snippet) (err error) {
 		}
 	}
 
-	err = os.WriteFile(filename, []byte(strings.Join(nl, "\n")), 0666)
+	body := strings.Join(nl, "\n")
+
+	if diff {
+		err = errors.Join(err, differr)
+		return
+	}
+
+	err = os.WriteFile(filename, []byte(body), 0666)
 	if err != nil {
 		return
+	}
+
+	if strings.HasSuffix(filename, ".go") {
+		// simplify Go code by `gofmt`
+		// error ignored, because it is not change the workflow
+		_, _ = exec.Command("gofmt", "-s", "-w", filename).Output()
 	}
 
 	return
@@ -224,10 +232,18 @@ func Get(filename string) (snippets []Snippet, err error) {
 		filename = gofiles[0]
 	}
 
-	lines, err := getLines(filename)
+	// read file
+	dat, err := os.ReadFile(filename)
 	if err != nil {
+		err = fmt.Errorf("%s cannot open. %w", filename, err)
 		return
 	}
+	if bytes.Contains(dat, []byte("\r")) {
+		err = fmt.Errorf("not support file `%s` with byte \\r", filename)
+		return
+	}
+	lines := strings.Split(string(dat), "\n")
+
 	var records []record
 	for i := range lines {
 		line := strings.TrimSpace(lines[i])
