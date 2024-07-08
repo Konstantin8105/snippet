@@ -44,19 +44,6 @@ const (
 	endName    = "end"
 )
 
-type status bool
-
-const (
-	start status = true
-	end   status = false
-)
-
-type record struct {
-	s    status
-	line int
-	name string
-}
-
 // Position line of code
 type Position struct {
 	Filename string
@@ -202,10 +189,24 @@ func Get(filename string) (snippets []Snippet, err error) {
 	}()
 	// end deferfunc
 
+	//
+	type (
+		status bool
+		record struct {
+			s    status
+			line int
+			name string
+		}
+	)
+	const (
+		start status = true
+		end   status = false
+	)
+
 	// check is file
 	{
 		var gofiles []string
-		gofiles, err = Paths(filename)
+		gofiles, err = paths(filename)
 		if err != nil {
 			return
 		}
@@ -383,7 +384,7 @@ func Compare(
 		return
 	}
 
-	var differr []ErrorDiff // error of diff
+	var differr []errorDiff // error of diff
 	for _, act := range actual {
 		found := false
 		index := -1
@@ -405,7 +406,7 @@ func Compare(
 		ac := strings.Join(act.Code, "\n")
 		ec := strings.Join(expect[index].Code, "\n")
 		if ac != ec {
-			de := ErrorDiff{Actual: act, Expect: expect[index]}
+			de := errorDiff{Actual: act, Expect: expect[index]}
 			differr = append(differr, de)
 			err = errors.Join(err,
 				de,
@@ -440,11 +441,11 @@ func Compare(
 	return
 }
 
-type ErrorDiff struct {
+type errorDiff struct {
 	Expect, Actual Snippet
 }
 
-func (e ErrorDiff) Error() string {
+func (e errorDiff) Error() string {
 	return fmt.Sprintf(
 		"%s: code is not same as in snippet `%s` in file: %s",
 		e.Actual.Start,
@@ -477,8 +478,8 @@ func Test(t interface {
 // SuffixFiles store list of acceptable fileformat
 var SuffixFiles = []string{".go"}
 
-// Paths return only go filenames
-func Paths(paths ...string) (files []string, err error) {
+// paths return only filenames with specific suffix
+func paths(paths ...string) (files []string, err error) {
 	const op = "Path"
 
 	defer func() {
