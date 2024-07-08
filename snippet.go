@@ -393,6 +393,7 @@ func Compare(expectFilename, actualFilename string) (err error) {
 			if strings.EqualFold(act.Name, exp.Name) {
 				found = true
 				index = ie
+				break
 			}
 		}
 		if !found {
@@ -407,9 +408,9 @@ func Compare(expectFilename, actualFilename string) (err error) {
 		ec := strings.Join(expect[index].Code, "\n")
 		if ac != ec {
 			err = errors.Join(err,
-				fmt.Errorf("%s code is not same",
-					act.Start,
-				))
+				fmt.Errorf("%s code is not same", act.Start),
+				compare.Diff([]byte(ac), []byte(ec)),
+			)
 			continue
 		}
 	}
