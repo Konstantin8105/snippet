@@ -64,7 +64,7 @@ type Position struct {
 }
 
 func (p Position) String() string {
-	return fmt.Sprintf("%s:%d:", p.Filename, p.Line)
+	return fmt.Sprintf("%s:%d", p.Filename, p.Line)
 }
 
 /*
@@ -398,7 +398,7 @@ func Compare(expectFilename, actualFilename string) (err error) {
 		}
 		if !found {
 			err = errors.Join(err,
-				fmt.Errorf("%s cannot find snippet with name `%s`",
+				fmt.Errorf("%s: cannot find snippet with name `%s`",
 					act.Start,
 					act.Name,
 				))
@@ -408,13 +408,27 @@ func Compare(expectFilename, actualFilename string) (err error) {
 		ec := strings.Join(expect[index].Code, "\n")
 		if ac != ec {
 			err = errors.Join(err,
-				fmt.Errorf("%s code is not same", act.Start),
+				ErrorDiff{Actual: act, Expect: expect[index]},
+				// fmt.Errorf("%s code is not same", act.Start),
 				compare.Diff([]byte(ac), []byte(ec)),
 			)
 			continue
 		}
 	}
 	return
+}
+
+type ErrorDiff struct {
+	Expect, Actual Snippet
+}
+
+func (e ErrorDiff) Error() string {
+	return fmt.Sprintf(
+		"%s: code is not same as in snippet `%s` in file: %s",
+		e.Actual.Start,
+		e.Expect.Name,
+		e.Expect.Start,
+	)
 }
 
 // ExpectSnippets is location of expect snippets

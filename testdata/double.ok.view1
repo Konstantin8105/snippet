@@ -1,6 +1,6 @@
-./testdata/double.ok:5:
+./testdata/double.ok:5
 // snippet B
 
 // some test B
 // end B
-./testdata/double.ok:8:
+./testdata/double.ok:8
