@@ -456,12 +456,20 @@ func (e ErrorDiff) Error() string {
 // ExpectSnippets is location of expect snippets
 var ExpectSnippets = "./expect.snippets"
 
-// Test check only '*.go' files in `folder` with subfolders.
+// Test and update snippets in all acceptable files in `folder` with subfolders.
 // Location with expected snippets in file "ExpectSnippets"
+//
+// for update snippets run in console:
+// UPDATE=true go test
+// or see package `compare`
 func Test(t interface {
 	Errorf(format string, args ...any)
 }, folder string) {
-	if err := Compare(folder, ExpectSnippets, true); err != nil {
+	diffOnly := true
+	if os.Getenv(compare.Key) == compare.KeyValid {
+		diffOnly = false
+	}
+	if err := Compare(folder, ExpectSnippets, diffOnly); err != nil {
 		t.Errorf("%v", err)
 	}
 }
