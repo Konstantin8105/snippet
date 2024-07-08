@@ -58,30 +58,31 @@ func Test(t *testing.T) {
 		t.Logf("%v", err)
 	}
 }
+
 func TestCompare(t *testing.T) {
 	t.Run("not.valid1", func(t *testing.T) {
-		err := snippet.Compare("Not exist 1", "Not exist 2")
+		err := snippet.Compare("Not exist 2", "Not exist 1", true)
 		if err == nil {
 			t.Errorf("shall be error")
 		}
 		t.Logf("%v", err)
 	})
 	t.Run("not.valid2", func(t *testing.T) {
-		err := snippet.Compare(td+"compare.expect", "Not exist 3")
+		err := snippet.Compare("Not exist 3", td+"compare.expect", true)
 		if err == nil {
 			t.Errorf("shall be error")
 		}
 		t.Logf("%v", err)
 	})
 	t.Run("not.valid3", func(t *testing.T) {
-		err := snippet.Compare(td+"compare.expect", td+"compare.fail.actual")
+		err := snippet.Compare(td+"compare.fail.actual", td+"compare.expect", true)
 		if err == nil {
 			t.Errorf("shall be error")
 		}
 		t.Logf("%v", err)
 	})
 	t.Run("valid", func(t *testing.T) {
-		err := snippet.Compare(td+"compare.expect", td+"compare.actual")
+		err := snippet.Compare(td+"compare.actual", td+"compare.expect", true)
 		if err != nil {
 			t.Error(err)
 		}
@@ -166,44 +167,26 @@ func TestUpdate(t *testing.T) {
 		}
 	}
 
-	sn, err := snippet.Get("./testdata/cli.expect")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = snippet.Update("./testdata/cli.actual.1", sn, true)
+	err = snippet.Compare("./testdata/cli.actual.1", "./testdata/cli.expect", true)
 	if err == nil {
 		t.Fatal("cannot find diff")
 	}
 	{
 		act1 := []byte(fmt.Sprintf("%v", err))
-		act, err := os.ReadFile("./testdata/cli.diff")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !bytes.Equal(act, act1) {
-			t.Fatalf("files are not same:\n%v", compare.Diff(act, act1))
-		}
+		compare.Test(t, "./testdata/cli.diff", act1)
 	}
 	err = nil // ignore
 
-	err = snippet.Update("./testdata/cli.actual.1", sn, false)
+	err = snippet.Compare("./testdata/cli.actual.1", "./testdata/cli.expect", false)
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	{
-		act, err := os.ReadFile("./testdata/cli.result")
-		if err != nil {
-			t.Fatal(err)
-		}
 		act1, err := os.ReadFile("./testdata/cli.actual.1")
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !bytes.Equal(act, act1) {
-			t.Fatalf("files are not same:\n%v", compare.Diff(act, act1))
-		}
+		compare.Test(t, "./testdata/cli.result", act1)
 	}
 
 	_, err = exec.Command("rm", "-f", "./testdata/cli.actual.1").Output()

@@ -87,8 +87,8 @@ func (s Snippet) String() string {
 	return out
 }
 
-// Update snippets in file `filename`
-func Update(filename string, sn []Snippet, diff bool) (err error) {
+// update snippets in file `filename`
+func update(filename string, sn []Snippet) (err error) {
 	const op = "Update"
 
 	// snippet deferfunc
@@ -173,12 +173,6 @@ func Update(filename string, sn []Snippet, diff bool) (err error) {
 	}
 
 	body := strings.Join(nl, "\n")
-
-	if diff {
-		err = errors.Join(err, differr)
-		return
-	}
-
 	err = os.WriteFile(filename, []byte(body), 0666)
 	if err != nil {
 		return
@@ -344,14 +338,17 @@ func Get(filename string) (snippets []Snippet, err error) {
 }
 
 // Compare snippers from expectFilenames and files/folders from actualFilename
-func Compare(expectFilename, actualFilename string) (err error) {
+func Compare(
+	actualFilename, expectFilename string,
+	diffOnly bool,
+) (err error) {
 	const op = "Compare"
 
 	defer func() {
 		if err != nil {
 			err = errors.Join(
 				fmt.Errorf("%s", op),
-				fmt.Errorf("Compare error: expect `%s`, actual `%s`",
+				fmt.Errorf("Error: expect `%s`, actual `%s`",
 					expectFilename,
 					actualFilename,
 				),
@@ -386,6 +383,7 @@ func Compare(expectFilename, actualFilename string) (err error) {
 		return
 	}
 
+	var differr []ErrorDiff // error of diff
 	for _, act := range actual {
 		found := false
 		index := -1
@@ -407,14 +405,38 @@ func Compare(expectFilename, actualFilename string) (err error) {
 		ac := strings.Join(act.Code, "\n")
 		ec := strings.Join(expect[index].Code, "\n")
 		if ac != ec {
+			de := ErrorDiff{Actual: act, Expect: expect[index]}
+			differr = append(differr, de)
 			err = errors.Join(err,
-				ErrorDiff{Actual: act, Expect: expect[index]},
-				// fmt.Errorf("%s code is not same", act.Start),
+				de,
 				compare.Diff([]byte(ac), []byte(ec)),
 			)
-			continue
 		}
 	}
+
+	if diffOnly {
+		return
+	}
+	err = nil // ignore errors
+
+	var filenames []string
+	for i := range differr {
+		found := false
+		for _, f := range filenames {
+			if f == differr[i].Actual.Start.Filename {
+				found = true
+			}
+		}
+		if found {
+			continue
+		}
+		filenames = append(filenames, differr[i].Actual.Start.Filename)
+	}
+
+	for _, filename := range filenames {
+		err = errors.Join(err, update(filename, expect))
+	}
+
 	return
 }
 
@@ -439,7 +461,7 @@ var ExpectSnippets = "./expect.snippets"
 func Test(t interface {
 	Errorf(format string, args ...any)
 }, folder string) {
-	if err := Compare(ExpectSnippets, folder); err != nil {
+	if err := Compare(folder, ExpectSnippets, true); err != nil {
 		t.Errorf("%v", err)
 	}
 }
