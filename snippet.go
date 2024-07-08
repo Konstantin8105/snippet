@@ -429,8 +429,11 @@ func Test(t interface {
 	}
 }
 
+// SuffixFiles store list of acceptable fileformat
+var SuffixFiles = []string{".go"}
+
 // Paths return only go filenames
-func Paths(paths ...string) (gofilenames []string, err error) {
+func Paths(paths ...string) (files []string, err error) {
 	const op = "Path"
 
 	defer func() {
@@ -458,16 +461,22 @@ func Paths(paths ...string) (gofilenames []string, err error) {
 					if info.IsDir() {
 						return nil
 					}
-					if !strings.HasSuffix(path, ".go") {
+					found := false
+					for _, sf := range SuffixFiles {
+						if strings.HasSuffix(path, sf) {
+							found = true
+						}
+					}
+					if !found {
 						return nil
 					}
-					gofilenames = append(gofilenames, path)
+					files = append(files, path)
 					return nil
 				})
 			err = errors.Join(err, errW)
 		} else {
 			// is file
-			gofilenames = append(gofilenames, path)
+			files = append(files, path)
 		}
 	}
 	return
