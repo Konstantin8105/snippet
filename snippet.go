@@ -481,7 +481,6 @@ func Test(t interface {
 	w := tabwriter.NewWriter(&buf, 0, 0, 1, ' ', 0)
 	var errs []error
 	for _, file := range files {
-		t.Logf("check file `%s`", file)
 		err = Compare(file, ExpectSnippets, diffOnly)
 		if err != nil {
 			errs = append(errs, err)
