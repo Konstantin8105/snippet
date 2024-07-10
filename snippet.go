@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/Konstantin8105/compare"
 )
@@ -465,12 +466,34 @@ var ExpectSnippets = "./expect.snippets"
 // or see package `compare`
 func Test(t interface {
 	Errorf(format string, args ...any)
+	Logf(format string, args ...any)
 }, folder string) {
 	diffOnly := true
 	if os.Getenv(compare.Key) == compare.KeyValid {
 		diffOnly = false
 	}
-	if err := Compare(folder, ExpectSnippets, diffOnly); err != nil {
+	files, err := paths(folder)
+	if err != nil {
+		t.Errorf("cannot find expect files in `%s`: %v", folder, err)
+		return
+	}
+	var buf bytes.Buffer
+	w := tabwriter.NewWriter(&buf, 0, 0, 1, ' ', 0)
+	var errs []error
+	for _, file := range files {
+		t.Logf("check file `%s`", file)
+		err = Compare(file, ExpectSnippets, diffOnly)
+		if err != nil {
+			errs = append(errs, err)
+		} else {
+			errs = append(errs, nil)
+		}
+		fmt.Fprintf(w, "%s\t%v\n", file, err)
+	}
+	w.Flush()
+	t.Logf("result:\n%s", buf.String())
+	err = errors.Join(errs...)
+	if err != nil {
 		t.Errorf("%v", err)
 	}
 }

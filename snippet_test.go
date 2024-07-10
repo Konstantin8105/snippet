@@ -90,11 +90,20 @@ func TestCompare(t *testing.T) {
 }
 
 type mockTest struct {
+	log string
 	res error
 }
 
 func (m *mockTest) Errorf(format string, args ...any) {
 	m.res = fmt.Errorf(format, args...)
+}
+
+func (m *mockTest) Logf(format string, args ...any) {
+	m.log += fmt.Sprintf(format, args...)
+}
+
+func (m mockTest) String() string {
+	return fmt.Sprintf("Error: %v\nLog: %s", m.res, m.log)
 }
 
 func TestTest(t *testing.T) {
@@ -109,7 +118,7 @@ func TestTest(t *testing.T) {
 		if m.res == nil {
 			t.Fatalf("shall be error")
 		}
-		t.Logf("%v", m.res)
+		t.Logf("%s", m)
 	})
 	t.Run("not.valid.snippet.folder", func(t *testing.T) {
 		// snippet B
@@ -125,7 +134,7 @@ func TestTest(t *testing.T) {
 		if m.res == nil {
 			t.Fatalf("shall be error")
 		}
-		t.Logf("%v", m.res)
+		t.Logf("%s", m)
 	})
 	t.Run("not.valid.snippet.file", func(t *testing.T) {
 		// snippet B
@@ -141,7 +150,7 @@ func TestTest(t *testing.T) {
 		if m.res == nil {
 			t.Fatalf("shall be error")
 		}
-		t.Logf("%v", m.res)
+		t.Logf("%s", m)
 	})
 }
 
