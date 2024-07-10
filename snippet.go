@@ -487,7 +487,19 @@ func Test(t interface {
 		} else {
 			errs = append(errs, nil)
 		}
-		fmt.Fprintf(w, "%s\t%v\n", file, err)
+		var res string // minimize error result
+		{
+			lines := strings.Split(fmt.Sprintf("%v", err), "\n")
+			for i := range lines {
+				lines[i] = strings.TrimSpace(lines[i])
+			}
+			res = strings.Join(lines, " ")
+			rs := []rune(res)
+			if size := 20; size < len(rs) {
+				res = string(rs[:size]) + "..."
+			}
+		}
+		fmt.Fprintf(w, "%s\t%s\n", file, res)
 	}
 	w.Flush()
 	t.Logf("result:\n%s", buf.String())
