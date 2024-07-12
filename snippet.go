@@ -472,6 +472,17 @@ func Test(t interface {
 	if os.Getenv(compare.Key) == compare.KeyValid {
 		diffOnly = false
 	}
+	{
+		// prepare ExpectSnippets
+		sns, err := Get(ExpectSnippets)
+		if err != nil {
+			t.Errorf("cannot get expect snippets: %w", err)
+			return
+		}
+		for i, s := range sns {
+			t.Logf("Snippet %02d. Name: `%s`", i+1, s.Name)
+		}
+	}
 	files, err := paths(folder)
 	if err != nil {
 		t.Errorf("cannot find expect files in `%s`: %v", folder, err)

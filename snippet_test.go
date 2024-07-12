@@ -184,7 +184,6 @@ func TestUpdate(t *testing.T) {
 		act1 := []byte(fmt.Sprintf("%v", err))
 		compare.Test(t, "./testdata/cli.diff", act1)
 	}
-	err = nil // ignore
 
 	err = snippet.Compare("./testdata/cli.actual.1", "./testdata/cli.expect", false)
 	if err != nil {
