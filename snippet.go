@@ -141,10 +141,11 @@ func update(filename string, sn []Snippet) (err error) {
 		err = fmt.Errorf("%s cannot open. %w", filename, err)
 		return
 	}
-	if bytes.Contains(dat, []byte("\r")) {
-		err = fmt.Errorf("not support file `%s` with byte \\r", filename)
-		return
-	}
+	dat = bytes.ReplaceAll(dat, []byte("\r"), []byte{})
+	// if bytes.Contains(dat, []byte("\r")) {
+	// 	err = fmt.Errorf("not support file `%s` with byte \\r", filename)
+	// 	return
+	// }
 	lines := strings.Split(string(dat), "\n")
 
 	var nl []string
@@ -234,10 +235,11 @@ func Get(filename string) (snippets []Snippet, err error) {
 		err = fmt.Errorf("%s cannot open. %w", filename, err)
 		return
 	}
-	if bytes.Contains(dat, []byte("\r")) {
-		err = fmt.Errorf("not support file `%s` with byte \\r", filename)
-		return
-	}
+	dat = bytes.ReplaceAll(dat, []byte("\r"), []byte{})
+	// if bytes.Contains(dat, []byte("\r")) {
+	// 	err = fmt.Errorf("not support file `%s` with byte \\r", filename)
+	// 	return
+	// }
 	lines := strings.Split(string(dat), "\n")
 
 	var records []record
@@ -456,7 +458,7 @@ func (e errorDiff) Error() string {
 }
 
 // ExpectSnippets is location of expect snippets
-var ExpectSnippets = "./expect.snippets"
+var ExpectSnippets = "expect.snippets"
 
 // Test and update snippets in all acceptable files in `folder` with subfolders.
 // Location with expected snippets in file "ExpectSnippets"

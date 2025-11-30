@@ -1,20 +1,20 @@
 Compare
-Error: expect `./testdata/cli.expect`, actual `./testdata/cli.actual.1`
-./testdata/cli.actual.1:6: code is not same as in snippet `A` in file: ./testdata/cli.expect:5
+Error: expect `D:\go\snippet\testdata\cli.expect`, actual `D:\go\snippet\testdata\cli.actual.1`
+D:\go\snippet\testdata\cli.actual.1:6: code is not same as in snippet `A` in file: D:\go\snippet\testdata\cli.expect:5
 
 *   1 "1s s"                                  "1"
 
-./testdata/cli.actual.1:13: code is not same as in snippet `B` in file: ./testdata/cli.expect:9
+D:\go\snippet\testdata\cli.actual.1:13: code is not same as in snippet `B` in file: D:\go\snippet\testdata\cli.expect:9
 
 *   2 "2 as"                                  "2"
 
-./testdata/cli.actual.1:20: code is not same as in snippet `C` in file: ./testdata/cli.expect:14
+D:\go\snippet\testdata\cli.actual.1:20: code is not same as in snippet `C` in file: D:\go\snippet\testdata\cli.expect:14
 
 *   1 "1 s"                                   "1"
     2 "2"                                     "2"
     3 "3"                                     "3"
 
-./testdata/cli.actual.1:30: code is not same as in snippet `D` in file: ./testdata/cli.expect:20
+D:\go\snippet\testdata\cli.actual.1:30: code is not same as in snippet `D` in file: D:\go\snippet\testdata\cli.expect:20
 
 *   2 "3s"                                    "2"
 *   3 "snipped Asd"                           "3"
@@ -23,21 +23,21 @@ Error: expect `./testdata/cli.expect`, actual `./testdata/cli.actual.1`
 *   6 "4"                                     << EMPTY LINE>>
 *   7 "5"                                     << EMPTY LINE>>
 and more other ...
-./testdata/cli.actual.1:50: code is not same as in snippet `A` in file: ./testdata/cli.expect:5
+D:\go\snippet\testdata\cli.actual.1:50: code is not same as in snippet `A` in file: D:\go\snippet\testdata\cli.expect:5
 
 *   1 ""                                      "1"
 
-./testdata/cli.actual.1:56: code is not same as in snippet `B` in file: ./testdata/cli.expect:9
+D:\go\snippet\testdata\cli.actual.1:56: code is not same as in snippet `B` in file: D:\go\snippet\testdata\cli.expect:9
 
 *   1 "2"                                     "1"
 *   2 << EMPTY LINE>>                         "2"
 
-./testdata/cli.actual.1:62: code is not same as in snippet `C` in file: ./testdata/cli.expect:14
+D:\go\snippet\testdata\cli.actual.1:62: code is not same as in snippet `C` in file: D:\go\snippet\testdata\cli.expect:14
 
 *   2 "3"                                     "2"
 *   3 << EMPTY LINE>>                         "3"
 
-./testdata/cli.actual.1:71: code is not same as in snippet `D` in file: ./testdata/cli.expect:20
+D:\go\snippet\testdata\cli.actual.1:71: code is not same as in snippet `D` in file: D:\go\snippet\testdata\cli.expect:20
 
 *   4 "5"                                     "4"
 *   5 << EMPTY LINE>>                         "5"

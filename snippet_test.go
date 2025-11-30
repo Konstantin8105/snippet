@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -12,10 +13,17 @@ import (
 	"github.com/Konstantin8105/snippet"
 )
 
-const td = "./testdata/" // test directory
+func td(file string) string {
+	dir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	dir = filepath.Join(dir, "testdata", file)
+	return dir
+}
 
 func Test(t *testing.T) {
-	entries, err := os.ReadDir(td)
+	entries, err := os.ReadDir(td(""))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,25 +31,26 @@ func Test(t *testing.T) {
 		name := ent.Name()
 		if strings.HasSuffix(name, "ok") {
 			t.Run(name, func(t *testing.T) {
-				sns, err := snippet.Get(td + name)
+				sns, err := snippet.Get(td(name))
 				if err != nil {
 					t.Fatal(err)
 				}
 				for i := range sns {
-					filename := fmt.Sprintf("%s%s.view%d", td, name, i)
+					filename := fmt.Sprintf("%s.view%d", td(name), i)
 					bs := []byte(
 						fmt.Sprintf("%s\n%s\n%s\n",
 							sns[i].Start,
 							sns[i],
 							sns[i].End,
 						))
+					bs = bytes.ReplaceAll(bs, []byte("\r"), []byte{})
 					compare.Test(t, filename, bs)
 				}
 			})
 		}
 		if strings.HasSuffix(name, "fail") {
 			t.Run(name, func(t *testing.T) {
-				_, err := snippet.Get(td + name)
+				_, err := snippet.Get(td(name))
 				if err == nil {
 					t.Errorf("not fail test")
 				}
@@ -68,21 +77,21 @@ func TestCompare(t *testing.T) {
 		t.Logf("%v", err)
 	})
 	t.Run("not.valid2", func(t *testing.T) {
-		err := snippet.Compare("Not exist 3", td+"compare.expect", true)
+		err := snippet.Compare("Not exist 3", td("compare.expect"), true)
 		if err == nil {
 			t.Errorf("shall be error")
 		}
 		t.Logf("%v", err)
 	})
 	t.Run("not.valid3", func(t *testing.T) {
-		err := snippet.Compare(td+"compare.fail.actual", td+"compare.expect", true)
+		err := snippet.Compare(td("compare.fail.actual"), td("compare.expect"), true)
 		if err == nil {
 			t.Errorf("shall be error")
 		}
 		t.Logf("%v", err)
 	})
 	t.Run("valid", func(t *testing.T) {
-		err := snippet.Compare(td+"compare.actual", td+"compare.expect", true)
+		err := snippet.Compare(td("compare.actual"), td("compare.expect"), true)
 		if err != nil {
 			t.Error(err)
 		}
@@ -157,17 +166,17 @@ func TestTest(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	var err error
 
-	_, err = exec.Command("cp", "./testdata/cli.actual", "./testdata/cli.actual.1").Output()
+	_, err = exec.Command("cp", td("cli.actual"), td("cli.actual.1")).Output()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	{
-		act, err := os.ReadFile("./testdata/cli.result")
+		act, err := os.ReadFile(td("cli.result"))
 		if err != nil {
 			t.Fatal(err)
 		}
-		act1, err := os.ReadFile("./testdata/cli.actual.1")
+		act1, err := os.ReadFile(td("cli.actual.1"))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -176,28 +185,28 @@ func TestUpdate(t *testing.T) {
 		}
 	}
 
-	err = snippet.Compare("./testdata/cli.actual.1", "./testdata/cli.expect", true)
+	err = snippet.Compare(td("cli.actual.1"), td("cli.expect"), true)
 	if err == nil {
 		t.Fatal("cannot find diff")
 	}
 	{
 		act1 := []byte(fmt.Sprintf("%v", err))
-		compare.Test(t, "./testdata/cli.diff", act1)
+		compare.Test(t, td("cli.diff"), act1)
 	}
 
-	err = snippet.Compare("./testdata/cli.actual.1", "./testdata/cli.expect", false)
+	err = snippet.Compare(td("cli.actual.1"), td("cli.expect"), false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	{
-		act1, err := os.ReadFile("./testdata/cli.actual.1")
+		act1, err := os.ReadFile(td("cli.actual.1"))
 		if err != nil {
 			t.Fatal(err)
 		}
-		compare.Test(t, "./testdata/cli.result", act1)
+		compare.Test(t, td("cli.result"), act1)
 	}
 
-	_, err = exec.Command("rm", "-f", "./testdata/cli.actual.1").Output()
+	_, err = exec.Command("rm", "-f", td("cli.actual.1")).Output()
 	if err != nil {
 		t.Fatal(err)
 	}
