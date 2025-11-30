@@ -138,7 +138,7 @@ func update(filename string, sn []Snippet) (err error) {
 	// read file
 	dat, err := os.ReadFile(filename)
 	if err != nil {
-		err = fmt.Errorf("%s cannot open. %w", filename, err)
+		err = fmt.Errorf("%s cannot open. %v", filename, err)
 		return
 	}
 	dat = bytes.ReplaceAll(dat, []byte("\r"), []byte{})
@@ -232,7 +232,7 @@ func Get(filename string) (snippets []Snippet, err error) {
 	// read file
 	dat, err := os.ReadFile(filename)
 	if err != nil {
-		err = fmt.Errorf("%s cannot open. %w", filename, err)
+		err = fmt.Errorf("%s cannot open. %v", filename, err)
 		return
 	}
 	dat = bytes.ReplaceAll(dat, []byte("\r"), []byte{})
@@ -478,7 +478,7 @@ func Test(t interface {
 		// prepare ExpectSnippets
 		sns, err := Get(ExpectSnippets)
 		if err != nil {
-			t.Errorf("cannot get expect snippets: %w", err)
+			t.Errorf("cannot get expect snippets: %v", err)
 			return
 		}
 		for i, s := range sns {
