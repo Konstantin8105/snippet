@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -165,12 +164,16 @@ func TestTest(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	var err error
-
-	_, err = exec.Command("cp", td("cli.actual"), td("cli.actual.1")).Output()
+	// copy files
+	data, err := os.ReadFile(td("cli.actual"))
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	err = os.WriteFile(td("cli.actual.1"), data, 0777)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// tests
 	{
 		act, err := os.ReadFile(td("cli.result"))
 		if err != nil {
@@ -206,7 +209,7 @@ func TestUpdate(t *testing.T) {
 		compare.Test(t, td("cli.result"), act1)
 	}
 
-	_, err = exec.Command("rm", "-f", td("cli.actual.1")).Output()
+	err = os.Remove(td("cli.actual.1"))
 	if err != nil {
 		t.Fatal(err)
 	}
