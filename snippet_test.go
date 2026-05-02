@@ -37,12 +37,11 @@ func Test(t *testing.T) {
 				for i := range sns {
 					filename := fmt.Sprintf("%s.view%d", td(name), i)
 					bs := []byte(
-						fmt.Sprintf("%s\n%s\n%s\n",
-							sns[i].Start,
+						fmt.Sprintf("%d\n%s\n%d\n",
+							sns[i].Start.Line,
 							sns[i],
-							sns[i].End,
+							sns[i].End.Line,
 						))
-					bs = bytes.ReplaceAll(bs, []byte("\r"), []byte{})
 					compare.Test(t, filename, bs)
 				}
 			})
