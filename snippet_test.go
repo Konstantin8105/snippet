@@ -193,7 +193,7 @@ func TestUpdate(t *testing.T) {
 		t.Fatal("cannot find diff")
 	}
 	{
-		act1 := []byte(fmt.Sprintf("%v", err))
+		act1 := []byte(err.Error())
 		compare.Test(t, td("cli.diff"), act1)
 	}
 

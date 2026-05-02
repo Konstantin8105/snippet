@@ -2,6 +2,8 @@ github.com/Konstantin8105/compare v0.0.0-20240706101316-2b8aefbb57c9 h1:U9gI4Kzc
 github.com/Konstantin8105/compare v0.0.0-20240706101316-2b8aefbb57c9/go.mod h1:fUpun9N0uSc9BUqjkF1m5yWEliJK6eijIf3n5+zZDIw=
 github.com/Konstantin8105/compare v0.0.0-20260422080133-e3b4e3c34d9c h1:NhbKZUpBPsXHCi/qhW7GtnAs86ICspPjknqDmtIDXVA=
 github.com/Konstantin8105/compare v0.0.0-20260422080133-e3b4e3c34d9c/go.mod h1:fYMgskDUMjGz2/tzub3LHJpo9p9wFD2hgHDY4nAs9Fk=
+github.com/Konstantin8105/compare v0.0.0-20260502090757-a31ae53f46f3 h1:uAUXEXv/sPkVsIPI6H9F4v3PkoqAof20rJq895LjYVQ=
+github.com/Konstantin8105/compare v0.0.0-20260502090757-a31ae53f46f3/go.mod h1:v8a8WcAHRJJuePH5WfCNNDPlAVOj2rK7XJyXQb5F75s=
 github.com/Konstantin8105/errors v0.1.0 h1:YlF98T37IPvBGzxbj6AhXrY4VdoFfW60KEibUOtOpkg=
 github.com/Konstantin8105/errors v0.1.0/go.mod h1:cKK/HtcfxJFe1RvnGzhWl8jcZpnTqZjKwvMBUrLsis4=
 github.com/Konstantin8105/tree v0.1.0/go.mod h1:/KrCn6rMgf1uoXUY2HjVvML1LeLUULD1BDiHWJhJwII=

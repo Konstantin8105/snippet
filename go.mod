@@ -2,7 +2,7 @@ module github.com/Konstantin8105/snippet
 
 go 1.26
 
-require github.com/Konstantin8105/compare v0.0.0-20260422080133-e3b4e3c34d9c
+require github.com/Konstantin8105/compare v0.0.0-20260502090757-a31ae53f46f3
 
 require (
 	github.com/Konstantin8105/errors v0.1.0 // indirect
